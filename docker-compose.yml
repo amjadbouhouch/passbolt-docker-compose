@@ -1,0 +1,85 @@
+version: "2.4"
+services:
+  nginx-proxy:
+    container_name: nginx-proxy
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: always
+    ports:
+      # These ports are in format <host-port>:<container-port>
+      - '80:80' # Public HTTP Port
+      - '443:443' # Public HTTPS Port
+      - '81:81' # Admin Web Port
+      # Add any other Stream port you want to expose
+      # - '21:21' # FTP
+
+    # Uncomment the next line if you uncomment anything in the section
+    # environment:
+      # Uncomment this if you want to change the location of
+      # the SQLite DB file within the container
+      # DB_SQLITE_FILE: "/data/database.sqlite"
+
+      # Uncomment this if IPv6 is not enabled on your host
+      # DISABLE_IPV6: 'true'
+
+    volumes:
+      - ./volumes/nginx-proxy/data:/data
+      - ./volumes/nginx-proxy/letsencrypt:/etc/letsencrypt
+  passbolt-db:
+    container_name: passbolt-db
+    image: mariadb:10.11
+    restart: always
+    volumes:
+      - ./volumes/passbolt-db/mysql:/var/lib/mysql
+    env_file:
+        - .env
+    mem_limit: 400m
+    cpus: 0.2
+  passbolt:
+    container_name: passbolt
+    #Alternatively you can use rootless:
+    image: passbolt/passbolt:latest-ce-non-root
+    restart: always
+    depends_on:
+      - passbolt-db
+    env_file:
+      - .env
+    mem_limit: 400m
+    cpus: 0.2
+    volumes:
+      - ./volumes/passbolt/gpg_volume:/etc/passbolt/gpg
+      - ./volumes/passbolt/jwt_volume:/etc/passbolt/jwt
+    command:
+      [
+        "/usr/bin/wait-for.sh",
+        "-t",
+        "0",
+        "passbolt-db:3306",
+        "--",
+        "/docker-entrypoint.sh",
+      ]
+    # ports:
+    #   - 4001:8080
+      # - 443:443
+    #Alternatively for non-root images:
+    # - 80:8080
+    # - 443:4433
+  # simple cron job that runs every minute 
+  # cron:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.cron
+  #   container_name: passbolt-cron
+  #   restart: always
+  #   command: >
+  #     /bin/sh -c "echo '* * * * * /scripts/backup-volumes.sh' > /etc/crontabs/root && 
+  #                 crond -f -d 0"
+  #   volumes:
+  #     - .env:/scripts/.env
+  #     - ./backup-volumes.sh:/scripts/backup-volumes.sh
+  #     - ./volumes:/scripts/volumes:ro
+  #   working_dir: /scripts 
+
+networks:
+  default:
+    external:
+      name: passbolt_network

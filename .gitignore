@@ -1,0 +1,13 @@
+.DS_Store
+
+.env
+.env.**
+backup_**
+backups
+
+volumes/nginx-proxy/data
+volumes/nginx-proxy/letsencrypt
+volumes/passbolt/gpg_volume
+volumes/passbolt/jwt_volume
+volumes/passbolt-db/mysql
+volumes/credentials/**

@@ -1,0 +1,14 @@
+# Dockerfile for custom cron service
+FROM alpine:latest
+
+# Install Docker CLI and other necessary tools
+RUN apk add --no-cache bash docker-cli
+
+# Set the working directory
+WORKDIR /scripts
+
+# Copy the script into the image
+COPY backup-volumes.sh /scripts/backup-volumes.sh
+
+# Set the script as executable
+RUN chmod +x /scripts/backup-volumes.sh
