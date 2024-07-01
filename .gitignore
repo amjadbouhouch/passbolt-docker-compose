@@ -11,3 +11,4 @@ volumes/passbolt/gpg_volume
 volumes/passbolt/jwt_volume
 volumes/passbolt-db/mysql
 volumes/credentials/**
+volumes/nginx-proxy/**
